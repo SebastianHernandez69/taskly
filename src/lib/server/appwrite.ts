@@ -16,9 +16,18 @@ export async function createSessionClient() {
 
     client.setSession(session.value);
 
+    const account = new Account(client);
+
+    try {
+        await account.get();
+    } catch (error) {
+        console.error("Session token is invalid or expired:", error);
+        throw new Error("Invalid or expired user session.");
+    }
+
     return {
         get account() {
-            return new Account(client);
+            return account;
             },
         get databases() {
             return new Databases(client);

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Users } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { gradientColors, GradientColor } from '@/styles/gradients';
 
 interface ListCardProps {
   id: string;
@@ -11,7 +11,7 @@ interface ListCardProps {
   totalTasks: number;
   completedTasks: number;
   progress: number;
-  color: string;
+  color: GradientColor;
   onClick: () => void;
 }
 
@@ -33,9 +33,9 @@ export const ListCard: React.FC<ListCardProps> = ({
         <h4 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
           {name}
         </h4>
-        <div className={`text-2xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+        <span className={`text-2xl font-bold bg-gradient-to-r ${gradientColors[color]} bg-clip-text text-transparent`}>
           {progress}%
-        </div>
+        </span>
       </div>
 
       <div className="flex items-center gap-4 text-sm text-slate-600">
@@ -55,7 +55,7 @@ export const ListCard: React.FC<ListCardProps> = ({
 
       <div className="mt-3 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
         <div
-          className={`h-full bg-gradient-to-r ${color} transition-all duration-500`}
+          className={`h-full bg-gradient-to-r ${gradientColors[color]} transition-all duration-500`}
           style={{ width: `${progress}%` }}
         />
       </div>

@@ -18,11 +18,13 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { GradientColor, gradientColors } from '@/styles/gradients';
+import { Label } from '../ui/label';
 
 // TODO: move to types file
 interface Color {
   $id: string;
-  class: string;
+  class: GradientColor;
 }
 
 interface NewListDialogProps {
@@ -94,6 +96,10 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
     formData.append('description', data.description || '');
     formData.append('colorId', data.colorId);
 
+    // Cerrar dialog y resetear ANTES de hacer la petición
+    onOpenChange(false);
+    reset();
+
     try {
       const result = await onCreateAction(formData);
       
@@ -101,8 +107,6 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
         toast.error(result.message || 'Failed to create list');
       } else {
         toast.success('List created successfully!');
-        reset();
-        onOpenChange(false);
       }
     } catch (error) {
       toast.error('Something went wrong');
@@ -124,6 +128,9 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
           <div className="grid gap-4 py-4">
             {/* Name Input */}
             <div>
+              <Label className="text-sm font-medium text-slate-700 mb-2">
+                List name
+              </Label>
               <Input
                 {...register('name')}
                 placeholder="List name..."
@@ -138,9 +145,9 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
 
             {/* Color Selector */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
+              <Label className="text-sm font-medium text-slate-700 ">
                 Choose a color
-              </label>
+              </Label>
               <div className="grid grid-cols-5 gap-2">
                 {colors.map((color) => (
                   <button
@@ -149,7 +156,7 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
                     onClick={() => setValue('colorId', color.$id)}
                     disabled={isSubmitting}
                     className={`
-                      relative h-12 rounded-lg bg-gradient-to-r ${color.class}
+                      relative h-12 rounded-lg bg-gradient-to-r ${gradientColors[color.class]}
                       transition-all duration-200 hover:scale-105 hover:shadow-lg
                       disabled:opacity-50 disabled:cursor-not-allowed
                       ${selectedColorId === color.$id ? 'ring-2 ring-slate-800 ring-offset-2' : ''}
@@ -171,6 +178,9 @@ export const NewListDialog: React.FC<NewListDialogProps> = ({
 
             {/* Description Textarea */}
             <div>
+              <Label className="text-sm font-medium text-slate-700 mb-2">
+                List description
+              </Label>
               <Textarea
                 {...register('description')}
                 placeholder="List description... (optional)"

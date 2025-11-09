@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from 'react'
+import React, { useState, useOptimistic, startTransition } from 'react'
 import { HeroCard } from '../molecules/HeroCard';
 import { Search } from 'lucide-react';
 import { EmptyListState } from '../molecules/EmptyListState';
 import { ListCard } from '../molecules/ListCard';
 import { NewListDialog } from './NewListDialog';
+import { GradientColor } from '@/styles/gradients';
+import { createList } from '@/lib/server/actions/lists';
+import { useRouter } from 'next/navigation';
 
 interface List {
   id: string;
@@ -15,17 +18,54 @@ interface List {
   totalTasks: number;
   completedTasks: number;
   progress: number;
-  color: string;
+  color: GradientColor;
+}
+
+interface Color {
+  id: string;
+  class: GradientColor;
 }
 
 interface ListSectionClientProps {
   initialLists: List[];
+  colors: Color[];
 }
 
-export const ListSectionClient = ({initialLists}: ListSectionClientProps ) => {
+export const ListSectionClient = ({initialLists, colors}: ListSectionClientProps ) => {
   const [showNewList, setShowNewList] = useState(false);
-  const [newListName, setNewListName] = useState('');
-  const [newListDescription, setNewListDescription] = useState('');
+  const router = useRouter();
+
+  const [optimisticLists, addOptimisticList] = useOptimistic(
+    initialLists,
+    (state, newList: List) => [...state, newList]
+  );
+
+  const handleCreateList = async (formData: FormData) => {
+    const name = formData.get("name") as string;
+    const description = formData.get("description") as string;
+    const colorId = formData.get("colorId") as string;
+    
+    const optimisticList: List = {
+      id: `temp-${Date.now()}`,
+      name,
+      description,
+      members: 1,
+      totalTasks: 0,
+      completedTasks: 0,
+      progress: 0,
+      color: colors.find(c => c.id === colorId)?.class || colors[0]?.class || ''
+    };
+
+    startTransition(() => {
+      addOptimisticList(optimisticList);
+    });
+    
+    const result = await createList(formData);
+    
+    router.refresh();
+
+    return result;
+  };
 
   return (
     <div className="container mx-auto px-6 pb-8 flex-1">
@@ -46,9 +86,9 @@ export const ListSectionClient = ({initialLists}: ListSectionClientProps ) => {
             </button>
           </div>
 
-          {initialLists.length > 0 ? (
+          {optimisticLists.length > 0 ? (
             <div className="grid sm:grid-cols-2 gap-4">
-              {initialLists.map((list) => (
+              {optimisticLists.map((list) => (
                 <ListCard key={list.id} {...list} onClick={() => {}} />
               ))}
             </div>
@@ -58,16 +98,12 @@ export const ListSectionClient = ({initialLists}: ListSectionClientProps ) => {
         </div>
       </div>
 
-
-      {/* <NewListDialog
+      <NewListDialog
         open={showNewList}
         onOpenChange={setShowNewList}
-        newListName={newListName}
-        onNewListNameChange={setNewListName}
-        newListDescription={newListDescription}
-        onNewListDescriptionChange={setNewListDescription}
-        onCreate={() => {}}
-      /> */}
+        onCreateAction={handleCreateList}
+        colors={colors.map(c => ({ $id: c.id, class: c.class }))}
+      />
     </div>
   );
 }

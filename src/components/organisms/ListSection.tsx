@@ -9,8 +9,6 @@ export const ListSection = async () => {
     getColors()
   ]);
 
-  console.log("Colors fetched in ListSection:", colors);
-
-  return <ListSectionClient initialLists={lists} />;
+  return <ListSectionClient initialLists={lists} colors={colors} />;
 
 };

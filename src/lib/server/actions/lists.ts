@@ -1,6 +1,6 @@
 "use server"
 
-import { Query } from "node-appwrite";
+import { Permission, Query, Role } from "node-appwrite";
 import { createSessionClient } from "../appwrite"
 
 
@@ -89,4 +89,47 @@ export async function getListsWithStats() {
     );
 
     return result;
+}
+
+export async function createList(formData: FormData) {
+    try {
+        const { account, databases } = await createSessionClient();
+        const user = await account.get();
+
+        const name = formData.get("name") as string;
+        const description = formData.get("description") as string;
+        const colorId = formData.get("colorId") as string;
+
+        if (!name || !colorId) {
+            return { success: false, message: "Name and color are required" };
+        }
+
+        const list = await databases.createDocument(
+            DB_ID,
+            LISTS_COLLECTION_ID,
+            "unique()",
+            {
+                name,
+                description: description || "",
+                colors: colorId,
+                ownerId: user.$id,
+            },
+        );
+
+        await databases.createDocument(
+            DB_ID,
+            LISTMEMBERS_COLLECTION_ID,
+            "unique()",
+            {
+                listId: list.$id,
+                userId: user.$id,
+                isOwner: true,
+            },
+        );
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error creating list:", error);
+        return { success: false, message: "Failed to create list" };
+    }
 }
